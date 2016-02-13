@@ -172,11 +172,26 @@ $scope.doReserve = function() {
 	};
         }])
 
-.controller('DishDetailController', ['$scope', '$stateParams', 'menuFactory', 'baseURL', function ($scope, $stateParams, menuFactory, baseURL) {
+.controller('DishDetailController', ['$scope', '$stateParams', 'menuFactory', 'baseURL', '$ionicPopover', '$ionicModal', 'favoriteFactory',
+    function ($scope, $stateParams, menuFactory, baseURL, $ionicPopover, $ionicModal, favoriteFactory) {
     $scope.baseURL = baseURL;
 	$scope.dish = {};
 	$scope.showDish = false;
 	$scope.message = "Loading ...";
+
+	$ionicPopover.fromTemplateUrl('templates/dish-detail-popover.html', {
+	    scope: $scope
+	}).then(function (popover) {
+	    $scope.dishDetailPopover = popover;
+	});
+
+	$ionicModal.fromTemplateUrl('templates/dish-comment.html', {
+	    scope: $scope
+	}).then(function (popover) {
+	    $scope.commentModal = popover;
+	});
+
+
 
 	$scope.dish = menuFactory.getDishes().get({
 			id: parseInt($stateParams.id, 10)
@@ -190,6 +205,33 @@ $scope.doReserve = function() {
 				$scope.message = "Error: " + response.status + " " + response.statusText;
 			}
 		);
+
+	$scope.addFavorite = function (index) {
+	    console.log("index is " + index);
+	    favoriteFactory.addToFavorites(index);
+	    $scope.dishDetailPopover.hide();
+	};
+
+	$scope.openCommentModal = function () {
+	    $scope.commentModal.show();
+	    $scope.dishDetailPopover.hide();
+	};
+
+	$scope.closeCommentModal = function () {
+	    $scope.commentModal.hide();
+	};
+
+	$scope.newComment = { rating: 5, comment: "", author: "", date: "" };
+	$scope.submitComment = function () {
+	    $scope.newComment.date = new Date().toISOString();
+	    console.log($scope.newComment);
+	    $scope.dish.comments.push($scope.newComment);
+	    menuFactory.getDishes().update({ id: $scope.dish.id }, $scope.dish);
+	    $scope.commentModal.hide();
+	    $scope.newComment = { rating: 5, comment: "", author: "", date: "" };
+	};
+
+
 
 
         }])
